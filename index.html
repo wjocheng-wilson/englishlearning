@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Emily 老師的美語樂園 - 手機互動版</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Fredoka', 'Noto Sans TC', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              primary: '#FF6B6B',
+              secondary: '#4ECDC4',
+              accent: '#FFE66D',
+              dark: '#2F2E41',
+              light: '#F7F9FC',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .card-flip-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .card-flipped .card-flip-inner {
+      transform: rotateY(180deg);
+    }
+    .card-front, .card-back {
+      backface-visibility: hidden;
+    }
+    .card-back {
+      transform: rotateY(180deg);
+    }
+    @keyframes pulse-slow {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2s infinite;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans antialiased min-h-screen pb-24">
+
+  <!-- 頂部狀態與等級切換列 -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200 px-4 py-3 shadow-sm">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-500 font-bold text-xl border-2 border-red-300">
+          👩‍🏫
+        </div>
+        <div>
+          <h1 class="font-bold text-base text-slate-800 leading-tight">Emily 美語樂園</h1>
+          <p class="text-xs text-slate-500" id="currentLevelLabel">🌱 國小基礎組</p>
+        </div>
+      </div>
+
+      <!-- 難度選擇器觸發按鈕 -->
+      <div class="flex items-center gap-2">
+        <button onclick="openLevelSheet()" class="bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-300 flex items-center gap-1.5 shadow-sm active:scale-95 transition">
+          <span id="levelBadgeIcon">🌱</span>
+          <span id="levelBadgeText">國小</span>
+          <i class="fa-solid fa-chevron-down text-[10px]"></i>
+        </button>
+        <button onclick="openBookmarksModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center relative active:scale-95 transition">
+          <i class="fa-solid fa-bookmark text-sm"></i>
+          <span id="bookmarkCountBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 頂部獎勵進度與經驗值 -->
+  <section class="max-w-md mx-auto px-4 mt-3">
+    <div class="bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl p-3 text-white shadow-md flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-xl">
+          ⭐
+        </div>
+        <div>
+          <div class="text-xs text-teal-100 font-medium">學習進度與星章</div>
+          <div class="text-lg font-bold flex items-center gap-1.5">
+            <span id="starCounter">0</span> <span class="text-xs font-normal text-teal-100">顆星星</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-xl border border-white/30 text-xs font-bold">
+        <span>🔥 連勝</span>
+        <span id="streakCounter" class="text-amber-300 font-extrabold text-sm">1</span>
+        <span>天</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主要內容顯示區 -->
+  <main class="max-w-md mx-auto px-4 mt-4" id="mainContent">
+    <!-- 動態渲染面板點 -->
+  </main>
+
+  <!-- 底部手機 Navigation Bar -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-lg border-t border-slate-200 px-2 py-2 shadow-lg">
+    <div class="max-w-md mx-auto flex justify-around items-center">
+      <button onclick="switchTab('words')" id="nav-words" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-teal-600 transition">
+        <i class="fa-solid fa-font text-lg mb-0.5"></i>
+        <span>單字</span>
+      </button>
+      <button onclick="switchTab('phrases')" id="nav-phrases" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-slate-400 transition">
+        <i class="fa-solid fa-comments text-lg mb-0.5"></i>
+        <span>片語</span>
+      </button>
+      <button onclick="switchTab('grammar')" id="nav-grammar" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-slate-400 transition">
+        <i class="fa-solid fa-book-open text-lg mb-0.5"></i>
+        <span>文法</span>
+      </button>
+      <button onclick="switchTab('skills')" id="nav-skills" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-slate-400 transition">
+        <i class="fa-solid fa-layer-group text-lg mb-0.5"></i>
+        <span>特訓</span>
+      </button>
+      <button onclick="switchTab('game')" id="nav-game" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-slate-400 transition">
+        <i class="fa-solid fa-gamepad text-lg mb-0.5"></i>
+        <span>消消樂</span>
+      </button>
+      <button onclick="switchTab('quiz')" id="nav-quiz" class="nav-btn flex flex-col items-center justify-center w-14 py-1 rounded-xl text-xs font-bold text-slate-400 transition">
+        <i class="fa-solid fa-trophy text-lg mb-0.5"></i>
+        <span>測驗</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- 底部彈出：程度選擇 Bottom Sheet Modal -->
+  <div id="levelModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden transition-opacity opacity-0 flex items-end justify-center">
+    <div class="bg-white w-full max-w-md rounded-t-3xl p-6 shadow-2xl transform translate-y-full transition-transform duration-300" id="levelModalContent">
+      <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+      <h2 class="text-lg font-bold text-slate-800 mb-1 text-center">切換學習難度等級</h2>
+      <p class="text-xs text-slate-500 mb-5 text-center">選擇適合孩子的程度，內容將即時更新</p>
+
+      <div class="space-y-3">
+        <button onclick="selectLevel('elementary')" class="w-full p-4 rounded-2xl border-2 flex items-center justify-between transition border-teal-500 bg-teal-50" id="btn-lvl-elementary">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🌱</span>
+            <div class="text-left">
+              <div class="font-bold text-sm text-slate-800">國小程度 (Beginner)</div>
+              <div class="text-xs text-slate-500">生活基礎單字、實用問候、基礎自然發音</div>
+            </div>
+          </div>
+          <i class="fa-solid fa-circle-check text-teal-600 text-lg"></i>
+        </button>
+
+        <button onclick="selectLevel('junior')" class="w-full p-4 rounded-2xl border-2 border-slate-200 flex items-center justify-between transition" id="btn-lvl-junior">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🌿</span>
+            <div class="text-left">
+              <div class="font-bold text-sm text-slate-800">國中程度 (Intermediate)</div>
+              <div class="text-xs text-slate-500">全民英檢初級、常考句型與基礎時態與文法</div>
+            </div>
+          </div>
+          <i class="fa-solid fa-circle-check text-slate-300 text-lg"></i>
+        </button>
+
+        <button onclick="selectLevel('senior')" class="w-full p-4 rounded-2xl border-2 border-slate-200 flex items-center justify-between transition" id="btn-lvl-senior">
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🌳</span>
+            <div class="text-left">
+              <div class="font-bold text-sm text-slate-800">高中程度 (Advanced)</div>
+              <div class="text-xs text-slate-500">學測指考高階詞彙、假設語氣與長句理解</div>
+            </div>
+          </div>
+          <i class="fa-solid fa-circle-check text-slate-300 text-lg"></i>
+        </button>
+      </div>
+
+      <button onclick="closeLevelSheet()" class="w-full mt-5 py-3 bg-slate-100 rounded-xl font-bold text-slate-600 text-sm">關閉</button>
+    </div>
+  </div>
+
+  <!-- 收藏庫 Modal -->
+  <div id="bookmarksModal" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm hidden transition-opacity opacity-0 flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl max-h-[80vh] flex flex-col">
+      <div class="flex items-center justify-between mb-4 pb-2 border-b">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-bookmark text-amber-500"></i> 單字收藏本
+        </h2>
+        <button onclick="closeBookmarksModal()" class="text-slate-400 hover:text-slate-600 text-xl font-bold">×</button>
+      </div>
+      <div id="bookmarksList" class="overflow-y-auto flex-1 space-y-2.5 pr-1">
+        <!-- 收藏清單動態生成 -->
+      </div>
+      <button onclick="closeBookmarksModal()" class="w-full mt-4 py-2.5 bg-teal-500 text-white rounded-xl font-bold text-sm">完成</button>
+    </div>
+  </div>
+
+  <!-- JavaScript 腳本與豐富數據庫 -->
+  <script>
+    // Audio Context 遊戲音效
+    function playSound(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'correct') {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1); // E5
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'wrong') {
+          osc.frequency.setValueAtTime(220, ctx.currentTime); // A3
+          osc.frequency.setValueAtTime(196, ctx.currentTime + 0.15); // G3
+          gain.gain.setValueAtTime(0.3, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.3);
+        } else if (type === 'click') {
+          osc.frequency.setValueAtTime(400, ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.05);
+        }
+      } catch (e) {
+        console.log("Audio not supported or restricted");
+      }
+    }
+
+    // 語音朗讀 (TTS)
+    let currentSpeechSpeed = 1.0;
+    function speakText(text) {
+      if (!('speechSynthesis' in window)) {
+        alert('您的瀏覽器不支援語音朗讀功能');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = currentSpeechSpeed;
+      window.speechSynthesis.speak(utter);
+    }
+
+    function toggleSpeechSpeed() {
+      if (currentSpeechSpeed === 1.0) currentSpeechSpeed = 0.7;
+      else if (currentSpeechSpeed === 0.7) currentSpeechSpeed = 1.2;
+      else currentSpeechSpeed = 1.0;
+      
+      const btn = document.getElementById('speedToggleBtn');
+      if (btn) btn.innerText = `${currentSpeechSpeed}x 語速`;
+      playSound('click');
+    }
+
+    // 全局應用狀態
+    const state = {
+      level: 'elementary', // elementary | junior | senior
+      tab: 'words',
+      stars: parseInt(localStorage.getItem('emily_stars') || '12'),
+      streak: 1,
+      bookmarks: JSON.parse(localStorage.getItem('emily_bookmarks') || '[]'),
+      
+      // 單字頁面狀態
+      wordDisplayIndex: 0,
+      activeWordBatch: [],
+      
+      // 片語頁面狀態
+      activePhraseBatch: [],
+
+      // 消消樂遊戲狀態
+      gameCards: [],
+      gameFlippedCards: [],
+      gameMatchedPairs: 0,
+      
+      // 聽說讀寫特訓狀態
+      skillIndex: 0
+    };
+
+    // ----------------------------------------------------
+    // 擴充數據資料庫 (Vocabulary & Material Database)
+    // ----------------------------------------------------
+    const vocabularyBank = {
+      elementary: [
+        { word: "Apple", kk: "/ˈæp.əl/", zh: "蘋果", sentence: "An apple a day keeps the doctor away.", szh: "一天一蘋果，醫生遠離我。" },
+        { word: "Banana", kk: "/bəˈnæn.ə/", zh: "香蕉", sentence: "Monkeys like to eat bananas.", szh: "猴子喜歡吃香蕉。" },
+        { word: "Cat", kk: "/kæt/", zh: "貓咪", sentence: "The sleeping cat is very cute.", szh: "那隻睡覺的貓咪非常可愛。" },
+        { word: "Dog", kk: "/dɒɡ/", zh: "狗狗", sentence: "The dog is barking happily.", szh: "這隻狗正開心地汪汪叫。" },
+        { word: "Elephant", kk: "/ˈel.ɪ.fənt/", zh: "大象", sentence: "The elephant has a long nose.", szh: "大象長著長長的鼻子。" },
+        { word: "Family", kk: "/ˈfæm.əl.i/", zh: "家庭", sentence: "I love my family very much.", szh: "我很愛我的家人。" },
+        { word: "Garden", kk: "/ˈɡɑː.dən/", zh: "花園", sentence: "There are beautiful flowers in the garden.", szh: "花園裡有美麗的花朵。" },
+        { word: "House", kk: "/haʊs/", zh: "房子", sentence: "They live in a big house.", szh: "他們住在一間大房子裡。" },
+        { word: "Ice cream", kk: "/ˈaɪs ˌkriːm/", zh: "冰淇淋", sentence: "Eating ice cream in summer is great.", szh: "夏天吃冰淇淋真棒。" },
+        { word: "Juice", kk: "/dʒuːs/", zh: "果汁", sentence: "Would you like some orange juice?", szh: "你想喝點柳橙汁嗎？" },
+        { word: "Kite", kk: "/kaɪt/", zh: "風箏", sentence: "The children are flying a kite.", szh: "孩子們正在放風箏。" },
+        { word: "Lion", kk: "/ˈlaɪ.ən/", zh: "獅子", sentence: "The lion is known as the king of the jungle.", szh: "獅子被稱為百獸之王。" },
+        { word: "Monkey", kk: "/ˈmʌŋ.ki/", zh: "猴子", sentence: "The monkey climbs trees quickly.", szh: "這隻猴子爬樹爬得很快。" },
+        { word: "Nurse", kk: "/nɜːs/", zh: "護理師", sentence: "The nurse is kind and friendly.", szh: "這位護理師親切又友善。" },
+        { word: "Orange", kk: "/ˈɒr.ɪndʒ/", zh: "橘子 / 橙色", sentence: "This orange tastes sweet and juicy.", szh: "這顆橘子吃起來甜美多汁。" },
+        { word: "Pencil", kk: "/ˈpen.səl/", zh: "鉛筆", sentence: "Please write your name with a pencil.", szh: "請用鉛筆寫下你的名字。" },
+        { word: "Queen", kk: "/kwiːn/", zh: "女王", sentence: "The queen wears a shiny crown.", szh: "女王戴著耀眼的皇冠。" },
+        { word: "Rabbit", kk: "/ˈræb.ɪt/", zh: "兔子", sentence: "The white rabbit jumps so fast.", szh: "小白兔跳得真快。" },
+        { word: "School", kk: "/skuːl/", zh: "學校", sentence: "We go to school every morning.", szh: "我們每天早上上學。" },
+        { word: "Teacher", kk: "/ˈtiː.tʃər/", zh: "老師", sentence: "Teacher Emily is very patient.", szh: "Emily 老師非常有耐心。" },
+        { word: "Umbrella", kk: "/ʌmˈbrel.ə/", zh: "雨傘", sentence: "Don't forget to take an umbrella.", szh: "別忘了帶一把傘。" },
+        { word: "Water", kk: "/ˈwɔː.tər/", zh: "水", sentence: "Please drink plenty of water.", szh: "請多喝水。" },
+        { word: "Yellow", kk: "/ˈjel.əʊ/", zh: "黃色", sentence: "The sun is bright yellow.", szh: "太陽是鮮艷的黃色。" },
+        { word: "Zebra", kk: "/ˈzeb.rə/", zh: "斑馬", sentence: "A zebra has black and white stripes.", szh: "斑馬身上有黑白相間的條紋。" }
+      ],
+      junior: [
+        { word: "Achieve", kk: "/əˈtʃiːv/", zh: "實現 / 達成", sentence: "You can achieve your dream if you work hard.", szh: "努力就能實現夢想。" },
+        { word: "Benefit", kk: "/ˈben.ɪ.fɪt/", zh: "好處 / 益處", sentence: "Reading daily has many benefits for students.", szh: "每天閱讀對學生有許多好處。" },
+        { word: "Century", kk: "/ˈsen.tʃər.i/", zh: "世紀 / 一百年", sentence: "We live in the 21st century.", szh: "我們生活在 21 世紀。" },
+        { word: "Decision", kk: "/dɪˈsɪʒ.ən/", zh: "決定", sentence: "Making a wise decision takes time.", szh: "做出明智的決定需要時間。" },
+        { word: "Environment", kk: "/ɪnˈvaɪ.rən.mənt/", zh: "環境", sentence: "We should protect our living environment.", szh: "我們應該保護生活環境。" },
+        { word: "Festival", kk: "/ˈfes.tɪ.vəl/", zh: "節慶", sentence: "The Moon Festival is coming soon.", szh: "中秋節快到了。" },
+        { word: "Government", kk: "/ˈɡʌv.ən.mənt/", zh: "政府", sentence: "The government built a new public park.", szh: "政府新建了一座公園。" },
+        { word: "Horizon", kk: "/həˈraɪ.zən/", zh: "地平線 / 眼界", sentence: "Travel broadens your horizons.", szh: "旅遊能開闊你的視野。" },
+        { word: "Influence", kk: "/ˈɪn.flu.əns/", zh: "影響", sentence: "Parents have a strong influence on kids.", szh: "父母對孩子有深遠的影響。" },
+        { word: "Journey", kk: "/ˈdʒɜː.ni/", zh: "旅程", sentence: "Life is a long and wonderful journey.", szh: "人生是一段漫長而精彩的旅程。" },
+        { word: "Knowledge", kk: "/ˈnɒl.ɪdʒ/", zh: "知識", sentence: "Knowledge is power.", szh: "知識就是力量。" },
+        { word: "Language", kk: "/ˈlæŋ.ɡwɪdʒ/", zh: "語言", sentence: "English is a global language.", szh: "英語是一門全球語言。" },
+        { word: "Necessary", kk: "/ˈnes.ə.ser.i/", zh: "必要的", sentence: "Sleep is necessary for good health.", szh: "良好的睡眠對健康是必要的。" },
+        { word: "Opportunity", kk: "/ˌɒp.əˈtʃuː.nə.ti/", zh: "機會", sentence: "Seize every opportunity to practice speaking.", szh: "抓住每個練習口說的機會。" },
+        { word: "Pollution", kk: "/pəˈluː.ʃən/", zh: "污染", sentence: "Plastic causes serious ocean pollution.", szh: "塑膠造成嚴重的海洋污染。" },
+        { word: "Quality", kk: "/ˈkwɒl.ə.ti/", zh: "品質 / 質素", sentence: "Focus on quality rather than quantity.", szh: "注重品質而非數量。" },
+        { word: "Relationship", kk: "/rɪˈleɪ.ʃən.ʃɪp/", zh: "關係", sentence: "Good communication builds trust in a relationship.", szh: "良好的溝通建立信任關係。" },
+        { word: "Situation", kk: "/ˌsɪtʃ.uˈeɪ.ʃən/", zh: "情況 / 局勢", sentence: "He handled the difficult situation calmly.", szh: "他冷靜地處理困境。" },
+        { word: "Technology", kk: "/tekˈnɒl.ə.dʒi/", zh: "科技", sentence: "Modern technology makes life easier.", szh: "現代科技讓生活更便利。" },
+        { word: "Understand", kk: "/ˌʌn.dəˈstænd/", zh: "理解 / 明白", sentence: "Do you understand the grammar rule?", szh: "你理解這個文法規則嗎？" },
+        { word: "Valuable", kk: "/ˈvæl.ju.ə.bəl/", zh: "寶貴的 / 有價值的", sentence: "Time is the most valuable asset we have.", szh: "時間是我們最寶貴的資產。" },
+        { word: "Wisdom", kk: "/ˈwɪz.dəm/", zh: "智慧", sentence: "Experience brings wisdom with age.", szh: "經驗隨著歲月累積帶來智慧。" },
+        { word: "Youth", kk: "/juːθ/", zh: "青春 / 年輕人", sentence: "Enjoy your youth and learn cheerfully.", szh: "享受青春並愉快的學習。" },
+        { word: "Zone", kk: "/zəʊn/", zh: "區域 / 地帶", sentence: "This is a quiet study zone.", szh: "這是一個安靜的學習區。" }
+      ],
+      senior: [
+        { word: "Abundant", kk: "/əˈbʌn.dənt/", zh: "豐富的 / 充沛的", sentence: "Taiwan is abundant in delicious tropical fruits.", szh: "台灣盛產豐富的美味熱帶水果。" },
+        { word: "Comprehensive", kk: "/ˌkɒm.prɪˈhen.sɪv/", zh: "全面性的 / 詳盡的", sentence: "The teacher provided a comprehensive review guide.", szh: "老師提供了一份全方位的複習指南。" },
+        { word: "Dilemma", kk: "/daɪˈlem.ə/", zh: "兩難處境", sentence: "She faced a dilemma between career and study.", szh: "她面臨事業與學業之間的兩難。" },
+        { word: "Empathy", kk: "/ˈem.pə.θi/", zh: "同理心", sentence: "Empathy allows us to understand others' feelings.", szh: "同理心讓我們能理解他人的感受。" },
+        { word: "Fluctuation", kk: "/ˌflʌk.tʃuˈeɪ.ʃən/", zh: "波動 / 起伏", sentence: "Price fluctuations affect consumer confidence.", szh: "價格波動影響消費者信心。" },
+        { word: "Guarantee", kk: "/ˌɡær.ənˈtiː/", zh: "保證 / 擔保", sentence: "Hard work does not guarantee immediate success.", szh: "努力不一定能保證立刻成功。" },
+        { word: "Hierarchy", kk: "/ˈhaɪə.rɑː.ki/", zh: "階層制度", sentence: "Companies often have a strict hierarchy.", szh: "公司通常有嚴格的階級制度。" },
+        { word: "Infrastructure", kk: "/ˈɪn.frəˌstrʌk.tʃər/", zh: "基礎建設", sentence: "Good infrastructure boosts economic growth.", szh: "完善的基礎建設帶動經濟成長。" },
+        { word: "Juxtapose", kk: "/ˌdʒʌk.stəˈpəʊz/", zh: "並列對比", sentence: "The gallery juxtaposes modern and classic art.", szh: "畫廊將現代與古典藝術並列呈現。" },
+        { word: "Kinetic", kk: "/kɪˈnet.ɪk/", zh: "動力的 / 運動的", sentence: "Wind energy converts kinetic power to electricity.", szh: "風力發電將動能轉化為電能。" },
+        { word: "Phenomenon", kk: "/fəˈnɒm.ɪ.nən/", zh: "現象", sentence: "Aurora borealis is a natural phenomenon.", szh: "北極光是一種自然的現象。" },
+        { word: "Quarantine", kk: "/ˈkwɒr.ən.tiːn/", zh: "隔離", sentence: "Travelers were placed in quarantine during epidemic.", szh: "疫情期間旅客被安排隔離。" },
+        { word: "Resilient", kk: "/rɪˈzɪl.jənt/", zh: "具韌性的 / 適應力強的", sentence: "Children are often highly resilient in tough times.", szh: "孩子在逆境中通常具備極高韌性。" },
+        { word: "Sustainable", kk: "/səˈsteɪ.nə.bəl/", zh: "永續的 / 可持續的", sentence: "We must adopt sustainable energy sources.", szh: "我們必須採用永續能源。" },
+        { word: "Transformation", kk: "/ˌtræns.fəˈmeɪ.ʃən/", zh: "轉型 / 巨變", sentence: "Digital transformation changes how we work.", szh: "數位轉型改變了我們的工作方式。" },
+        { word: "Unprecedented", kk: "/ʌnˈpres.ɪ.den.tɪd/", zh: "史無前例的", sentence: "The discovery led to unprecedented progress.", szh: "這項發現帶來前所未有的進展。" },
+        { word: "Vulnerable", kk: "/ˈvʌl.nər.ə.bəl/", zh: "脆弱的 / 易受傷害的", sentence: "Elderly people are more vulnerable to cold weather.", szh: "長者對寒冷天氣較為脆弱。" },
+        { word: "Whimsical", kk: "/ˈwɪm.zɪ.kəl/", zh: "異想天開的 / 古怪有趣的", sentence: "The story is filled with whimsical ideas.", szh: "這故事充滿異想天開的巧思。" },
+        { word: "Yield", kk: "/jiːld/", zh: "產出 / 屈服", sentence: "This investment will yield high returns.", szh: "這項投資將帶來高額報酬。" },
+        { word: "Zealous", kk: "/ˈzel.əs/", zh: "熱情的 / 狂熱的", sentence: "She is zealous about environmental protection.", szh: "她對環境保護非常熱心。" },
+        { word: "Ambiguity", kk: "/ˌæm.bɪˈɡjuː.ə.ti/", zh: "模稜兩可 / 含糊", sentence: "Avoid ambiguity in clear instructions.", szh: "在清晰的指示中避免模稜兩可。" },
+        { word: "Benevolent", kk: "/bəˈnev.əl.ənt/", zh: "仁慈的 / 樂善好施的", sentence: "The benevolent leader donated money to charity.", szh: "這位仁慈的領袖捐款給慈善機構。" },
+        { word: "Coincidence", kk: "/kəʊˈɪn.sɪ.dəns/", zh: "巧合", sentence: "Meeting you here is a strange coincidence.", szh: "在這裡遇見你真是神奇的巧合。" },
+        { word: "Discrepancy", kk: "/dɪˈskrep.ən.si/", zh: "不符 / 差異", sentence: "There is a discrepancy in the financial report.", szh: "財務報告中有不一致之處。" }
+      ]
+    };
+
+    const phraseBank = {
+      elementary: [
+        { en: "Good morning", zh: "早安", ex: "Good morning, Teacher Emily!" },
+        { en: "How are you?", zh: "你好嗎？", ex: "How are you today? I am happy!" },
+        { en: "Nice to meet you", zh: "很高興認識你", ex: "Nice to meet you, my name is Tom." },
+        { en: "Thank you very much", zh: "非常感謝你", ex: "Thank you very much for helping me." }
+      ],
+      junior: [
+        { en: "Look forward to", zh: "期待...", ex: "I look forward to seeing you soon." },
+        { en: "Take advantage of", zh: "利用 / 善用", ex: "Take advantage of this learning opportunity." },
+        { en: "As a result of", zh: "由於...的結果", ex: "He succeeded as a result of hard work." },
+        { en: "Give up", zh: "放棄", ex: "Never give up on your dreams!" }
+      ],
+      senior: [
+        { en: "In spite of", zh: "儘管...", ex: "In spite of the rain, we went camping." },
+        { en: "Comply with", zh: "遵守 (法規)", ex: "All members must comply with regulations." },
+        { en: "Pave the way for", zh: "為...鋪路", ex: "New research paved the way for a cure." },
+        { en: "Take it for granted", zh: "視為理所當然", ex: "Don't take family support for granted." }
+      ]
+    };
+
+    const grammarBank = {
+      elementary: {
+        title: "Be 動詞的用法 (Am / Is / Are)",
+        desc: "I 配 am；Single單數主詞(He, She, It, Tom) 配 is；Plural複數主詞(We, You, They) 配 are！",
+        quiz: [
+          { q: "She ____ my best friend.", opts: ["am", "is", "are"], ans: "is" },
+          { q: "They ____ playing in the park.", opts: ["is", "are", "am"], ans: "are" }
+        ]
+      },
+      junior: {
+        title: "現在完成式 (Have / Has + V3)",
+        desc: "表示從過去持續到現在的動作或經驗。公式：主詞 + have/has + 過去分詞(p.p.)。",
+        quiz: [
+          { q: "I have ____ English for three years.", opts: ["study", "studied", "studying"], ans: "studied" },
+          { q: "He has never ____ to Japan before.", opts: ["been", "be", "was"], ans: "been" }
+        ]
+      },
+      senior: {
+        title: "與過去事實相反之假設語氣",
+        desc: "表達對過去已發生事實的遺憾或假設：If + S + had + p.p., S + would/could + have + p.p.",
+        quiz: [
+          { q: "If I had studied harder, I ____ the exam.", opts: ["passed", "would pass", "would have passed"], ans: "would have passed" }
+        ]
+      }
+    };
+
+    // ----------------------------------------------------
+    // 控制與頁面渲染邏輯
+    // ----------------------------------------------------
+
+    // 初始化與加載
+    window.addEventListener('DOMContentLoaded', () => {
+      refreshDataBatches();
+      renderCurrentTab();
+      updateHeaderBadges();
+    });
+
+    function refreshDataBatches() {
+      // 從對應程度隨機取 6 個單字
+      const fullList = vocabularyBank[state.level] || vocabularyBank.elementary;
+      state.activeWordBatch = shuffleArray([...fullList]).slice(0, 6);
+      state.wordDisplayIndex = 0;
+
+      // 隨機選取片語
+      const pList = phraseBank[state.level] || phraseBank.elementary;
+      state.activePhraseBatch = shuffleArray([...pList]);
+    }
+
+    function shuffleArray(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    function updateHeaderBadges() {
+      const labels = { elementary: "🌱 國小基礎組", junior: "🌿 國中進階組", senior: "🌳 高中精英組" };
+      const icons = { elementary: "🌱", junior: "🌿", senior: "🌳" };
+      const texts = { elementary: "國小", junior: "國中", senior: "高中" };
+
+      document.getElementById('currentLevelLabel').innerText = labels[state.level];
+      document.getElementById('levelBadgeIcon').innerText = icons[state.level];
+      document.getElementById('levelBadgeText').innerText = texts[state.level];
+
+      document.getElementById('starCounter').innerText = state.stars;
+      document.getElementById('streakCounter').innerText = state.streak;
+
+      // 更新書籤數量
+      const badge = document.getElementById('bookmarkCountBadge');
+      if (state.bookmarks.length > 0) {
+        badge.innerText = state.bookmarks.length;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+
+      // 儲存進度
+      localStorage.setItem('emily_stars', state.stars);
+      localStorage.setItem('emily_bookmarks', JSON.stringify(state.bookmarks));
+    }
+
+    // 切換分頁
+    function switchTab(tabName) {
+      state.tab = tabName;
+      playSound('click');
+
+      // 更新 nav 樣式
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-teal-600');
+        btn.classList.add('text-slate-400');
+      });
+      const activeNav = document.getElementById(`nav-${tabName}`);
+      if (activeNav) {
+        activeNav.classList.remove('text-slate-400');
+        activeNav.classList.add('text-teal-600');
+      }
+
+      renderCurrentTab();
+    }
+
+    // 主內容渲染
+    function renderCurrentTab() {
+      const main = document.getElementById('mainContent');
+
+      if (state.tab === 'words') {
+        renderWordsView(main);
+      } else if (state.tab === 'phrases') {
+        renderPhrasesView(main);
+      } else if (state.tab === 'grammar') {
+        renderGrammarView(main);
+      } else if (state.tab === 'skills') {
+        renderSkillsView(main);
+      } else if (state.tab === 'game') {
+        renderGameView(main);
+      } else if (state.tab === 'quiz') {
+        renderQuizView(main);
+      }
+    }
+
+    // ----------------------------------------------------
+    // Tab 1: 🔤 單字閃卡 (Words)
+    // ----------------------------------------------------
+    function renderWordsView(container) {
+      const w = state.activeWordBatch[state.wordDisplayIndex] || state.activeWordBatch[0];
+      const isBookmarked = state.bookmarks.some(item => item.word === w.word);
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-teal-500"></i> 互動單字卡 (${state.wordDisplayIndex + 1}/${state.activeWordBatch.length})
+          </h2>
+          <div class="flex items-center gap-2">
+            <button onclick="toggleSpeechSpeed()" id="speedToggleBtn" class="text-xs bg-slate-200 text-slate-700 px-2.5 py-1 rounded-full font-bold">
+              ${currentSpeechSpeed}x 語速
+            </button>
+            <button onclick="refreshWordsBatch()" class="text-xs bg-teal-100 text-teal-700 px-2.5 py-1 rounded-full font-bold active:scale-95 transition">
+              🔄 換一批
+            </button>
+          </div>
+        </div>
+
+        <!-- 3D 翻轉卡片容器 -->
+        <div class="relative w-full h-80 cursor-pointer perspective" onclick="flipCard(this)">
+          <div class="card-flip-inner relative w-full h-full rounded-3xl bg-white shadow-xl border border-slate-100 p-6 flex flex-col justify-between text-center transform transition duration-500">
+            
+            <!-- 卡片正面 -->
+            <div class="card-front absolute inset-0 p-6 flex flex-col justify-between items-center bg-gradient-to-b from-white to-teal-50/30 rounded-3xl">
+              <div class="w-full flex justify-between items-center">
+                <span class="text-xs text-teal-600 bg-teal-100 px-3 py-1 rounded-full font-bold">點擊卡片看中文</span>
+                <button onclick="event.stopPropagation(); toggleBookmark('${encodeURIComponent(JSON.stringify(w))}')" class="text-xl ${isBookmarked ? 'text-amber-400' : 'text-slate-300'}">
+                  <i class="fa-solid fa-star"></i>
+                </button>
+              </div>
+
+              <div>
+                <h1 class="text-4xl font-extrabold text-slate-800 mb-1">${w.word}</h1>
+                <p class="text-slate-400 font-mono text-sm">${w.kk}</p>
+              </div>
+
+              <button onclick="event.stopPropagation(); speakText('${w.word}')" class="w-14 h-14 rounded-full bg-teal-500 text-white flex items-center justify-center text-xl shadow-lg active:scale-95 transition animate-pulse-slow">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+
+            <!-- 卡片背面 -->
+            <div class="card-back absolute inset-0 p-6 flex flex-col justify-between items-center bg-teal-600 text-white rounded-3xl">
+              <div class="w-full flex justify-between items-center">
+                <span class="text-xs bg-white/20 px-3 py-1 rounded-full">中文釋義與例句</span>
+                <i class="fa-solid fa-rotate text-sm text-white/70"></i>
+              </div>
+
+              <div>
+                <h2 class="text-3xl font-extrabold mb-1">${w.zh}</h2>
+                <div class="mt-4 bg-white/10 p-3 rounded-2xl text-xs text-teal-100 text-left leading-relaxed">
+                  <p class="font-bold text-white mb-1">例句：</p>
+                  <p class="italic mb-1">${w.sentence}</p>
+                  <p class="text-teal-200">${w.szh}</p>
+                </div>
+              </div>
+
+              <button onclick="event.stopPropagation(); speakText('${w.sentence}')" class="bg-white/20 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
+                <i class="fa-solid fa-volume-high"></i> 朗讀整句
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 左右切換按鈕 -->
+        <div class="flex items-center justify-between mt-5">
+          <button onclick="prevWord()" class="w-12 h-12 rounded-2xl bg-white text-slate-700 shadow-md flex items-center justify-center text-lg font-bold active:scale-95 transition">
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+          <div class="text-slate-400 text-xs font-bold">左右滑動或點擊按鈕</div>
+          <button onclick="nextWord()" class="w-12 h-12 rounded-2xl bg-teal-500 text-white shadow-md flex items-center justify-center text-lg font-bold active:scale-95 transition">
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      `;
+    }
+
+    function flipCard(el) {
+      el.classList.toggle('card-flipped');
+      playSound('click');
+    }
+
+    function nextWord() {
+      state.wordDisplayIndex = (state.wordDisplayIndex + 1) % state.activeWordBatch.length;
+      playSound('click');
+      renderCurrentTab();
+    }
+
+    function prevWord() {
+      state.wordDisplayIndex = (state.wordDisplayIndex - 1 + state.activeWordBatch.length) % state.activeWordBatch.length;
+      playSound('click');
+      renderCurrentTab();
+    }
+
+    function refreshWordsBatch() {
+      refreshDataBatches();
+      playSound('click');
+      renderCurrentTab();
+    }
+
+    function toggleBookmark(encodedObj) {
+      const wordObj = JSON.parse(decodeURIComponent(encodedObj));
+      const idx = state.bookmarks.findIndex(item => item.word === wordObj.word);
+      if (idx >= 0) {
+        state.bookmarks.splice(idx, 1);
+      } else {
+        state.bookmarks.push(wordObj);
+      }
+      updateHeaderBadges();
+      renderCurrentTab();
+    }
+
+    // ----------------------------------------------------
+    // Tab 2: 💬 情境片語 (Phrases)
+    // ----------------------------------------------------
+    function renderPhrasesView(container) {
+      container.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-comments text-amber-500"></i> 情境實用片語
+          </h2>
+          <button onclick="refreshDataBatches(); renderCurrentTab(); playSound('click');" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold">
+            🔄 換一批
+          </button>
+        </div>
+
+        <div class="space-y-3">
+          ${state.activePhraseBatch.map(p => `
+            <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between gap-2">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="font-extrabold text-slate-800 text-base">${p.en}</h3>
+                  <span class="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">${p.zh}</span>
+                </div>
+                <button onclick="speakText('${p.en}')" class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm active:scale-95 transition">
+                  <i class="fa-solid fa-volume-high"></i>
+                </button>
+              </div>
+              <div class="bg-slate-50 p-2.5 rounded-xl text-xs text-slate-600 italic">
+                "${p.ex}"
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ----------------------------------------------------
+    // Tab 3: 📖 文法教室 (Grammar)
+    // ----------------------------------------------------
+    function renderGrammarView(container) {
+      const g = grammarBank[state.level] || grammarBank.elementary;
+
+      container.innerHTML = `
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 mb-4">
+          <span class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-bold">Emily 老師文法講堂</span>
+          <h2 class="text-lg font-bold text-slate-800 mt-2 mb-1">${g.title}</h2>
+          <p class="text-xs text-slate-600 leading-relaxed bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100 mb-4">
+            ${g.desc}
+          </p>
+
+          <h3 class="font-bold text-sm text-slate-800 mb-2 flex items-center gap-1.5">
+            <i class="fa-solid fa-pen-to-square text-indigo-500"></i> 隨堂小測驗
+          </h3>
+
+          <div class="space-y-4">
+            ${g.quiz.map((q, qIdx) => `
+              <div class="p-3 bg-slate-50 rounded-2xl">
+                <p class="text-xs font-bold text-slate-800 mb-2">${qIdx + 1}.${q.q}</p>
+                <div class="grid grid-cols-3 gap-2">
+                  ${q.opts.map(opt => `
+                    <button onclick="checkGrammarAns(this, '${opt}', '${q.ans}')" class="py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 active:scale-95 transition">
+                      ${opt}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function checkGrammarAns(btn, selected, correct) {
+      if (selected === correct) {
+        btn.className = "py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold active:scale-95 transition shadow-md";
+        playSound('correct');
+        state.stars += 2;
+        updateHeaderBadges();
+      } else {
+        btn.className = "py-2 bg-rose-500 text-white rounded-xl text-xs font-bold active:scale-95 transition";
+        playSound('wrong');
+      }
+    }
+
+    // ----------------------------------------------------
+    // Tab 4: 🎧 聽說讀寫特訓 (4 Skills)
+    // ----------------------------------------------------
+    function renderSkillsView(container) {
+      const words = vocabularyBank[state.level];
+      const target = words[state.skillIndex % words.length];
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-bullseye text-purple-500"></i> 聽說讀寫四項特訓
+          </h2>
+          <button onclick="state.skillIndex++; renderCurrentTab(); playSound('click');" class="text-xs bg-purple-100 text-purple-800 px-2.5 py-1 rounded-full font-bold">
+            🎲 換一題
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <!-- 聽力挑戰 -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+            <span class="text-xs bg-purple-100 text-purple-700 px-2.5 py-0.5 rounded-md font-bold">聽力測驗</span>
+            <p class="text-xs text-slate-500 mt-1 mb-3">點擊聲音按鈕聽語音，選出正確答案：</p>
+            
+            <div class="flex justify-center mb-4">
+              <button onclick="speakText('${target.word}')" class="w-14 h-14 rounded-full bg-purple-500 text-white flex items-center justify-center text-xl shadow-md active:scale-95 transition">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              ${shuffleArray([target.zh, "蘋果", "學校", "機會"]).slice(0, 4).map(option => `
+                <button onclick="checkSkillAns(this, '${option}', '${target.zh}')" class="py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 active:scale-95 transition">
+                  ${option}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <!-- 口說特訓 -->
+          <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 text-center">
+            <span class="text-xs bg-rose-100 text-rose-700 px-2.5 py-0.5 rounded-md font-bold">口說特訓</span>
+            <p class="text-xs text-slate-500 mt-1 mb-2">請朗讀以下單字：</p>
+            <h3 class="text-2xl font-extrabold text-slate-800 mb-3">${target.word}</h3>
+            
+            <button onclick="simulateSpeechRec('${target.word}')" class="bg-rose-500 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-md flex items-center justify-center gap-2 mx-auto active:scale-95 transition">
+              <i class="fa-solid fa-microphone"></i> 點擊開始發音比對
+            </button>
+            <div id="speechFeedback" class="mt-2 text-xs font-bold min-h-[1.25rem]"></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function checkSkillAns(btn, selected, correct) {
+      if (selected === correct) {
+        btn.className = "py-2.5 bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md";
+        playSound('correct');
+        state.stars += 3;
+        updateHeaderBadges();
+      } else {
+        btn.className = "py-2.5 bg-rose-500 text-white rounded-xl text-xs font-bold";
+        playSound('wrong');
+      }
+    }
+
+    function simulateSpeechRec(targetWord) {
+      const feedback = document.getElementById('speechFeedback');
+      feedback.className = "mt-2 text-xs font-bold text-amber-600";
+      feedback.innerText = "聆聽中...請朗讀 " + targetWord;
+
+      setTimeout(() => {
+        feedback.className = "mt-2 text-xs font-bold text-emerald-600";
+        feedback.innerText = "🎉 發音非常標準！綜合評分：98 分！";
+        playSound('correct');
+        state.stars += 5;
+        updateHeaderBadges();
+      }, 1500);
+    }
+
+    // ----------------------------------------------------
+    // Tab 5: 🧩 單字消消樂 (Match Game)
+    // ----------------------------------------------------
+    function renderGameView(container) {
+      if (state.gameCards.length === 0) {
+        initMatchGame();
+      }
+
+      container.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+            <i class="fa-solid fa-gamepad text-teal-500"></i> 單字翻牌消消樂
+          </h2>
+          <button onclick="initMatchGame(); renderCurrentTab();" class="text-xs bg-teal-100 text-teal-800 px-2.5 py-1 rounded-full font-bold">
+            🔄 重來一局
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2.5">
+          ${state.gameCards.map((card, idx) => `
+            <button onclick="flipGameCard(${idx})" class="h-20 rounded-2xl font-bold text-xs p-2 flex items-center justify-center text-center transition shadow-sm ${
+              card.matched 
+                ? 'bg-slate-100 text-slate-300 border-none' 
+                : card.flipped 
+                  ? 'bg-teal-500 text-white shadow-md' 
+                  : 'bg-white text-slate-700 border border-slate-200 active:scale-95'
+            }">
+              ${card.flipped || card.matched ? card.text : '❓'}
+            </button>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function initMatchGame() {
+      const pool = vocabularyBank[state.level];
+      const selected = shuffleArray([...pool]).slice(0, 4); // 4對 = 8張牌
+      let cards = [];
+
+      selected.forEach((item, id) => {
+        cards.push({ id, text: item.word, type: 'en', flipped: false, matched: false });
+        cards.push({ id, text: item.zh, type: 'zh', flipped: false, matched: false });
+      });
+
+      state.gameCards = shuffleArray(cards);
+      state.gameFlippedCards = [];
+      state.gameMatchedPairs = 0;
+    }
+
+    function flipGameCard(index) {
+      const card = state.gameCards[index];
+      if (card.flipped || card.matched || state.gameFlippedCards.length >= 2) return;
+
+      card.flipped = true;
+      playSound('click');
+      state.gameFlippedCards.push({ index, card });
+
+      if (state.gameFlippedCards.length === 2) {
+        const [first, second] = state.gameFlippedCards;
+        if (first.card.id === second.card.id && first.card.type !== second.card.type) {
+          // 配對成功
+          setTimeout(() => {
+            first.card.matched = true;
+            second.card.matched = true;
+            state.gameFlippedCards = [];
+            state.gameMatchedPairs++;
+            playSound('correct');
+            state.stars += 5;
+            updateHeaderBadges();
+
+            if (state.gameMatchedPairs === 4) {
+              alert('🎉 恭喜通關消消樂！獲得 20 顆星星獎勵！');
+              state.stars += 20;
+              updateHeaderBadges();
+            }
+            renderCurrentTab();
+          }, 400);
+        } else {
+          // 配對失敗
+          setTimeout(() => {
+            first.card.flipped = false;
+            second.card.flipped = false;
+            state.gameFlippedCards = [];
+            playSound('wrong');
+            renderCurrentTab();
+          }, 800);
+        }
+      }
+      renderCurrentTab();
+    }
+
+    // ----------------------------------------------------
+    // Tab 6: 🏆 綜合測驗與證書 (Quiz)
+    // ----------------------------------------------------
+    function renderQuizView(container) {
+      const words = vocabularyBank[state.level];
+      const quizQuestions = shuffleArray([...words]).slice(0, 5);
+
+      container.innerHTML = `
+        <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
+          <div class="text-center mb-5">
+            <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-2xl mx-auto mb-2">🏆</div>
+            <h2 class="font-extrabold text-slate-800 text-base">綜合能力檢定測驗</h2>
+            <p class="text-xs text-slate-500">測驗包含單字與釋義配對，完成可獲榮譽證書</p>
+          </div>
+
+          <div class="space-y-4">
+            ${quizQuestions.map((item, idx) => `
+              <div class="p-3 bg-slate-50 rounded-2xl">
+                <p class="text-xs font-bold text-slate-800 mb-2">${idx + 1}. 請選出 "${item.word}" 的正確中文釋義：</p>
+                <div class="grid grid-cols-2 gap-2">
+                  ${shuffleArray([item.zh, "學校", "機會", "快樂"]).map(opt => `
+                    <button onclick="checkQuizItem(this, '${opt}', '${item.zh}')" class="py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-700 active:scale-95 transition">
+                      ${opt}
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <button onclick="finishQuiz()" class="w-full mt-6 py-3 bg-emerald-500 text-white rounded-2xl font-bold text-sm shadow-md active:scale-95 transition">
+            完成測驗並領取證書
+          </button>
+        </div>
+      `;
+    }
+
+    function checkQuizItem(btn, selected, correct) {
+      if (selected === correct) {
+        btn.className = "py-2 bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md";
+        playSound('correct');
+      } else {
+        btn.className = "py-2 bg-rose-500 text-white rounded-xl text-xs font-bold";
+        playSound('wrong');
+      }
+    }
+
+    function finishQuiz() {
+      playSound('correct');
+      state.stars += 30;
+      updateHeaderBadges();
+      alert('🏆 恭喜您完成綜合測驗！獲得 A+ 優秀榮譽證書與 30 顆星星獎勵！');
+    }
+
+    // ----------------------------------------------------
+    // 收藏庫彈出視窗
+    // ----------------------------------------------------
+    function openBookmarksModal() {
+      const modal = document.getElementById('bookmarksModal');
+      const list = document.getElementById('bookmarksList');
+
+      if (state.bookmarks.length === 0) {
+        list.innerHTML = `<p class="text-xs text-slate-400 text-center py-8">目前尚未收藏任何單字卡喔！</p>`;
+      } else {
+        list.innerHTML = state.bookmarks.map(item => `
+          <div class="p-3 bg-slate-50 rounded-2xl flex items-center justify-between">
+            <div>
+              <div class="font-bold text-sm text-slate-800">${item.word}</div>
+              <div class="text-xs text-slate-500">${item.zh}</div>
+            </div>
+            <button onclick="speakText('${item.word}')" class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-xs">
+              <i class="fa-solid fa-volume-high"></i>
+            </button>
+          </div>
+        `).join('');
+      }
+
+      modal.classList.remove('hidden');
+      setTimeout(() => modal.classList.remove('opacity-0'), 10);
+    }
+
+    function closeBookmarksModal() {
+      const modal = document.getElementById('bookmarksModal');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    // ----------------------------------------------------
+    // 程度 Bottom Sheet 控制
+    // ----------------------------------------------------
+    function openLevelSheet() {
+      const modal = document.getElementById('levelModal');
+      const content = document.getElementById('levelModalContent');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        modal.classList.remove('opacity-0');
+        content.classList.remove('translate-y-full');
+      }, 10);
+    }
+
+    function closeLevelSheet() {
+      const modal = document.getElementById('levelModal');
+      const content = document.getElementById('levelModalContent');
+      content.classList.add('translate-y-full');
+      modal.classList.add('opacity-0');
+      setTimeout(() => modal.classList.add('hidden'), 300);
+    }
+
+    function selectLevel(lvl) {
+      state.level = lvl;
+      playSound('click');
+
+      // 更新 modal 按鈕邊框
+      ['elementary', 'junior', 'senior'].forEach(l => {
+        const btn = document.getElementById(`btn-lvl-${l}`);
+        if (l === lvl) {
+          btn.className = "w-full p-4 rounded-2xl border-2 border-teal-500 bg-teal-50 flex items-center justify-between transition";
+        } else {
+          btn.className = "w-full p-4 rounded-2xl border-2 border-slate-200 flex items-center justify-between transition";
+        }
+      });
+
+      refreshDataBatches();
+      initMatchGame();
+      updateHeaderBadges();
+      renderCurrentTab();
+      closeLevelSheet();
+    }
+  </script>
+</body>
+</html>
